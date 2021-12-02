@@ -1,1 +1,1 @@
-# Job-Posting-App
+# Job-Posting-API
