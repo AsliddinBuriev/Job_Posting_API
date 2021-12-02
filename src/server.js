@@ -3,7 +3,7 @@ const app = express()
 
 app.get('/', (req, res, next) => {
   res.status(200).json({
-    status: success,
+    status: 'success',
     data: 'test pipeline!'
   })
 })
