@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
-import e from 'express';
 import mongoose from 'mongoose';
 import validator from 'validator';
+import crypto from 'crypto';
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -25,7 +25,6 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
     select: false,
   },
-  //check if the password and passwordConfirm are equal
   passwordConfirm: {
     type: String,
     required: [true, 'Password must be confirmed'],
@@ -37,25 +36,52 @@ const userSchema = new mongoose.Schema({
     },
   },
   lastPwChanged: Date,
+  pwResetToken: String,
+  pwResetTokenExpire: Date,
 });
 
-//bcrypt password
+//mongoose middleware => bcrypt password
 userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
 });
-
-//isPasswordCorrect
+//mongoose middleware => update lastPwChanged value
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') && this.isNew) return next();
+  this.lastPwChanged = Date.now();
+  next();
+});
+//mongoose methods => isPasswordCorrect compare with bcrypt
 userSchema.methods.isPasswordCorrect = async (candidatePw, userPw) =>
   await bcrypt.compare(candidatePw, userPw);
 
-//isPaswordChanged
+//mongoose methods => isPaswordChanged before log in
 userSchema.methods.isPasswordChanged = function (iat) {
+  //if password changed
   if (this.lastPwChanged)
     return iat < parseInt(Date.parse(this.lastPwChanged) / 1000, 10);
-
+  //default
   return false;
+};
+//mongoose methods => generateResetPwToken
+userSchema.methods.generateResetPwToken = async function () {
+  //generate token
+  const pwResetToken = await new Promise((res, rej) => {
+    crypto.randomBytes(32, (err, buf) => {
+      if (err) rej(err);
+      res(buf.toString('hex'));
+    });
+  });
+  //encrypt token
+  this.pwResetToken = crypto
+    .createHash('sha256')
+    .update(pwResetToken)
+    .digest('hex');
+  this.pwResetTokenExpire = Date.now() + 10 * 60 * 1000;
+  // console.log(this.pwResetToken, this.pwResetTokenExpire);
+  return pwResetToken;
 };
 
 export default mongoose.model('User', userSchema);

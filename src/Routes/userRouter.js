@@ -1,14 +1,29 @@
-import { Router } from "express";
-import { login, signup } from "../Controllers/authController.js";
-import { getAllUsers } from "../Controllers/userController.js";
-const router = Router()
+import { Router } from 'express';
+import {
+  forgotPassword,
+  login,
+  protect,
+  resetPassword,
+  signup,
+  updatePassword,
+} from '../Controllers/authController.js';
+import { getAllUsers } from '../Controllers/userController.js';
+const router = Router();
 
+//sign up route
+router.post('/signup', signup);
 
-//sign up route 
-router.route('/signup').post(signup)
+//log in route
+router.post('/login', login);
 
-//log in route 
-router.route('/login').post(login)
-export default router
+//update password
+router.patch('/update-password', protect, updatePassword);
 
-router.route('/').get(getAllUsers)
+//forget password
+router.post('/forgot-password', forgotPassword);
+
+//reset password
+router.patch('/reset-password/:token', resetPassword);
+
+router.route('/').get(getAllUsers);
+export default router;
