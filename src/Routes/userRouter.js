@@ -1,23 +1,25 @@
 import { Router } from 'express';
+import jobRouter from './../Routes/jobRouter.js';
 import {
   forgotPassword,
   login,
   protect,
   resetPassword,
   signup,
-  updatePassword,
+  updateMyPassword,
 } from '../Controllers/authController.js';
-import { getAllUsers } from '../Controllers/userController.js';
+import {
+  deleteMyAccount,
+  editMyProfile,
+  getUserProfile,
+} from '../Controllers/userController.js';
 const router = Router();
-
+//nested routes => redirect to jobRouter
+router.use('/account/jobs', jobRouter);
 //sign up route
 router.post('/signup', signup);
 
-//log in route
 router.post('/login', login);
-
-//update password
-router.patch('/update-password', protect, updatePassword);
 
 //forget password
 router.post('/forgot-password', forgotPassword);
@@ -25,5 +27,14 @@ router.post('/forgot-password', forgotPassword);
 //reset password
 router.patch('/reset-password/:token', resetPassword);
 
-router.route('/').get(getAllUsers);
+//update password
+router.patch('/update-password', protect, updateMyPassword);
+
+//get public profile
+router.get('/:username', getUserProfile);
+
+//protected routes => user account
+router.use(protect);
+router.route('/account').patch(editMyProfile).delete(deleteMyAccount);
+
 export default router;

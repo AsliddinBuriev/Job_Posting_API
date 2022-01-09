@@ -2,43 +2,62 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import validator from 'validator';
 import crypto from 'crypto';
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'A user must have a name'],
-  },
-  email: {
-    type: String,
-    required: [true, 'A user must have an email'],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email'],
-  },
-  resume: {
-    type: String,
-    // required: [true, 'A user must have a resume']
-  },
-  photo: String,
-  password: {
-    type: String,
-    required: [true, 'A user must have a password'],
-    minlength: 8,
-    select: false,
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Password must be confirmed'],
-    validate: {
-      validator: function (el) {
-        return el === this.password;
-      },
-      message: 'The passwords are not the same!',
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      unique: true,
+      required: [true, 'A user must have a name'],
     },
+    email: {
+      type: String,
+      required: [true, 'A user must have an email'],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please provide a valid email'],
+    },
+    resume: {
+      type: String,
+      // required: [true, 'A user must have a resume']
+    },
+    photo: String,
+    password: {
+      type: String,
+      required: [true, 'A user must have a password'],
+      minlength: 8,
+      select: false,
+    },
+    passwordConfirm: {
+      type: String,
+      required: [true, 'Password must be confirmed'],
+      validate: {
+        validator: function (el) {
+          return el === this.password;
+        },
+        message: 'The passwords are not the same!',
+      },
+    },
+    lastPwChanged: {
+      type: Date,
+      select: false,
+    },
+    pwResetToken: String,
+    pwResetTokenExpire: Date,
   },
-  lastPwChanged: Date,
-  pwResetToken: String,
-  pwResetTokenExpire: Date,
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    id: false,
+  }
+);
+//mongoose virtual => get postedJobs field from child document
+userSchema.virtual('postedJobs', {
+  ref: 'Job',
+  foreignField: 'postedBy',
+  localField: '_id',
 });
+
+//mongoose virtual => gets appliedJobs field from child document
 
 //mongoose middleware => bcrypt password
 userSchema.pre('save', async function (next) {
@@ -47,12 +66,14 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
 //mongoose middleware => update lastPwChanged value
 userSchema.pre('save', function (next) {
-  if (!this.isModified('password') && this.isNew) return next();
-  this.lastPwChanged = Date.now();
+  if (this.isModified('password') && !this.isNew)
+    this.lastPwChanged = Date.now();
   next();
 });
+
 //mongoose methods => isPasswordCorrect compare with bcrypt
 userSchema.methods.isPasswordCorrect = async (candidatePw, userPw) =>
   await bcrypt.compare(candidatePw, userPw);
@@ -65,6 +86,7 @@ userSchema.methods.isPasswordChanged = function (iat) {
   //default
   return false;
 };
+
 //mongoose methods => generateResetPwToken
 userSchema.methods.generateResetPwToken = async function () {
   //generate token
@@ -80,7 +102,6 @@ userSchema.methods.generateResetPwToken = async function () {
     .update(pwResetToken)
     .digest('hex');
   this.pwResetTokenExpire = Date.now() + 10 * 60 * 1000;
-  // console.log(this.pwResetToken, this.pwResetTokenExpire);
   return pwResetToken;
 };
 
