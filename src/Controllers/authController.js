@@ -5,6 +5,35 @@ import MakeError from './../utils/MakeError.js';
 import sendMail from './../utils/mail.js';
 import crypto from 'crypto';
 
+//send token
+const sendToken = async (res, statusCode, user) => {
+  try {
+    //1. create token
+    const token = await sign({ id: user._id });
+    const cookieOpt = {
+      expires: new Date(
+        Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
+      ),
+      httpOnly: true,
+    };
+    if (process.env.NODE_ENV === 'production') cookieOpt.secure = true;
+    user.password = undefined;
+    user.lastPwChanged = undefined;
+    //2. send token and cookie
+    res.cookie('jwt', token, cookieOpt);
+    res.status(statusCode).json({
+      status: 'success',
+      message: 'You are logged in!',
+      token,
+      data: {
+        user,
+      },
+    });
+  } catch (err) {
+    new MakeError('Something went very wrong!', 500);
+  }
+};
+
 /******** SIGN UP *******/
 export const signup = catchAsyncErr(async (req, res, next) => {
   //1.create user
@@ -13,18 +42,9 @@ export const signup = catchAsyncErr(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    lastPwChanged: req.body.lastPwChanged,
   });
-  //2.create token
-  const token = await sign({ id: newUser._id });
-  //3.send response
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  //send token
+  await sendToken(res, 201, newUser);
 });
 
 /********  LOG IN *******/
@@ -38,33 +58,8 @@ export const login = catchAsyncErr(async (req, res, next) => {
   const user = await User.findOne({ email }).select('+password');
   if (!user || !(await user.isPasswordCorrect(password, user.password)))
     return next(new MakeError('Email or password is wrong!', 401));
-
-  //3. create token
-  const token = await sign({ id: user._id });
-  //4. send response
-  res.status(201).json({
-    status: 'success',
-    token,
-  });
-});
-
-/********  UPDATE PASSWORD *******/
-export const updatePassword = catchAsyncErr(async (req, res, next) => {
-  //get the current user
-  const user = await User.findById(req.user._id).select('+password');
-  //2. check user password
-  if (!(await user.isPasswordCorrect(req.body.oldPassword, user.password)))
-    return next(new MakeError('Your password is not correct', 401));
-  //3. update password
-  user.password = req.body.newPassword;
-  user.passwordConfirm = req.body.passwordConfirm;
-  await user.save();
-  //4. login again
-  const token = await sign({ id: user._id });
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  //3. send token
+  await sendToken(res, 200, user);
 });
 
 /******** PROTECT *******/
@@ -74,7 +69,7 @@ export const protect = catchAsyncErr(async (req, res, next) => {
   let token;
   if (authorization && authorization.startsWith('Bearer'))
     token = authorization.split(' ')[1];
-  if (!token) next(new MakeError('You are not logged in.', 401));
+  if (!token) return next(new MakeError('You are not logged in.', 401));
 
   //2. verify jwt token
   const decoded = await verify(token);
@@ -122,7 +117,6 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
       )
     );
   }
-
   res.status(200).json({
     status: 'success',
     message: `Reset password url is sent to your email!`,
@@ -153,11 +147,21 @@ export const resetPassword = catchAsyncErr(async (req, res, next) => {
   user.pwResetTokenExpire = undefined;
   await user.save();
 
-  //4. create jwt token and log the user in
-  const token = await sign({ id: user._id });
-  res.status(200).json({
-    status: 'success',
-    message: 'You are logged in with your new password!',
-    token,
-  });
+  //4. send token
+  await sendToken(res, 200, user);
+});
+
+/********  UPDATE PASSWORD *******/
+export const updateMyPassword = catchAsyncErr(async (req, res, next) => {
+  //get the current user
+  const user = await User.findById(req.user._id).select('+password');
+  //2. check user password
+  if (!(await user.isPasswordCorrect(req.body.oldPassword, user.password)))
+    return next(new MakeError('Your password is not correct', 401));
+  //3. update password
+  user.password = req.body.newPassword;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+  //4. send token
+  await sendToken(res, 200, user);
 });
