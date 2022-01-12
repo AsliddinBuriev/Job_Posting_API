@@ -1,8 +1,7 @@
 import catchAsyncErr from '../utils/catchAsyncErr.js';
 import MakeError from '../utils/MakeError.js';
-import Query from '../utils/query.js';
 import Job from './../Models/jobSchema.js';
-import User from './../Models/userSchema.js';
+import Query from '../utils/query.js';
 
 /******** GET ALL JOBS *******/
 export const getAllJobs = catchAsyncErr(async (req, res, next) => {
@@ -21,8 +20,8 @@ export const getAllJobs = catchAsyncErr(async (req, res, next) => {
 });
 
 /******** CALL PROTECTED ROUTE *******/
-export const callNextRoute = (req, res, next) => {
-  if (req.baseUrl === '/api/v1/user/account/jobs') return next('route');
+export const callProtectedRoute = (req, res, next) => {
+  if (req.baseUrl === '/api/v1/user/posted-jobs') return next('route');
   next();
 };
 

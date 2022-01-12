@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import jobRouter from './../Routes/jobRouter.js';
 import {
   forgotPassword,
   login,
@@ -13,9 +12,32 @@ import {
   editMyProfile,
   getUserProfile,
 } from '../Controllers/userController.js';
+import {
+  deleteAJob,
+  getAJob,
+  getAllJobs,
+  getMyPostedJobs,
+  restrict,
+  updateAJob,
+} from '../Controllers/jobController.js';
+import { getApplicants } from '../Controllers/applicationController.js';
+
 const router = Router();
-//nested routes => redirect to jobRouter
-router.use('/account/jobs', jobRouter);
+
+//nested routes => user/poseted-jobs
+router.get('/posted-jobs', protect, getMyPostedJobs, getAllJobs);
+router.use('/posted-jobs/:jobId', protect, restrict);
+router
+  .route('/posted-jobs/:jobId')
+  .get(getAJob)
+  .patch(updateAJob)
+  .delete(deleteAJob);
+
+router.get('/posted-jobs/:jobId/applications', getApplicants);
+
+//applied jobs
+// router.get('/applied-jobs', )
+
 //sign up route
 router.post('/signup', signup);
 
