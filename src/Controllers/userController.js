@@ -2,7 +2,7 @@ import catchAsyncErr from '../utils/catchAsyncErr.js';
 import MakeError from '../utils/MakeError.js';
 import User from './../Models/userSchema.js';
 
-/******** GET PERSONAL ACCOUNT *******/
+/******** GET USER PROFILE *******/
 export const getUserProfile = catchAsyncErr(async (req, res, next) => {
   //get current user
   const user = await User.findOne({ name: req.params.username });

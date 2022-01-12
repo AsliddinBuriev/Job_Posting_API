@@ -25,15 +25,6 @@ const jobSchema = new mongoose.Schema(
       required: [true, 'A job must have a creator!'],
       select: false,
     },
-    applicants: {
-      type: [
-        {
-          type: mongoose.Schema.ObjectId,
-          ref: 'User',
-        },
-      ],
-      select: false,
-    },
     contract: {
       type: String,
       required: [true, 'A job must have contract type.'],
@@ -53,5 +44,10 @@ const jobSchema = new mongoose.Schema(
     id: false,
   }
 );
-
+//mongoose virtual => get applicants
+jobSchema.virtual('applicants', {
+  ref: 'Application',
+  foreignField: 'jobId',
+  localField: '_id',
+});
 export default mongoose.model('Job', jobSchema);

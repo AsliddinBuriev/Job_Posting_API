@@ -1,24 +1,15 @@
 import { Router } from 'express';
 import { protect } from '../Controllers/authController.js';
-import {
-  callNextRoute,
-  deleteAJob,
-  getAJob,
-  getAllJobs,
-  getMyPostedJobs,
-  postJob,
-  restrict,
-  updateAJob,
-} from '../Controllers/jobController.js';
+import applicationRouter from './applicationRouter.js';
+import { getAJob, getAllJobs, postJob } from '../Controllers/jobController.js';
 
 const router = Router({ mergeParams: true });
+
+//if /:jobId/apply => direct to applicationRouter
+router.use('/:jobId/apply', applicationRouter);
+
 //unprotected routes
-router.route('/').get(callNextRoute, getAllJobs).post(protect, postJob);
-router.route('/:jobId').get(callNextRoute, getAJob);
+router.route('/').get(getAllJobs).post(protect, postJob);
+router.route('/:jobId').get(getAJob);
 
-//protected routes
-router.get('/', protect, getMyPostedJobs, getAllJobs);
-router.use('/:jobId', protect, restrict);
-
-router.route('/:jobId').get(getAJob).patch(updateAJob).delete(deleteAJob);
 export default router;
