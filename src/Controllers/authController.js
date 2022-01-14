@@ -4,6 +4,7 @@ import { sign, verify } from '../utils/jwt.js';
 import MakeError from './../utils/MakeError.js';
 import sendMail from './../utils/mail.js';
 import crypto from 'crypto';
+import sendResponse from '../utils/sendResponse.js';
 
 //send token
 const sendToken = async (res, statusCode, user) => {
@@ -23,7 +24,6 @@ const sendToken = async (res, statusCode, user) => {
     res.cookie('jwt', token, cookieOpt);
     res.status(statusCode).json({
       status: 'success',
-      message: 'You are logged in!',
       token,
       data: {
         user,
@@ -104,7 +104,7 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
     await sendMail({
       email: user.email,
       subject: 'Reset your password!',
-      text: `Please go the url to reset your password: ${req.protocol}://${req.hostname}/api/v1/user/reset-password/${token}\nThe url is valid for 10 minutes!`,
+      text: `Please go to the url to reset your password: http://localhost:3000/recovery/${token}\nThe url is valid for 10 minutes!`,
     });
   } catch (err) {
     user.pwResetToken = undefined;
@@ -117,10 +117,8 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
       )
     );
   }
-  res.status(200).json({
-    status: 'success',
-    message: `Reset password url is sent to your email!`,
-  });
+  //send response
+  sendResponse(res, 204);
 });
 
 /******** PASSWORD RESET *******/

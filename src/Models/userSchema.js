@@ -4,9 +4,13 @@ import validator from 'validator';
 import crypto from 'crypto';
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
-      required: [true, 'A user must have a name'],
+      required: [true, 'A user must have a  firstname'],
+    },
+    lastName: {
+      type: String,
+      required: [true, 'A user must have a last name'],
     },
     email: {
       type: String,
@@ -17,7 +21,6 @@ const userSchema = new mongoose.Schema(
     },
     resume: {
       type: String,
-      // required: [true, 'A user must have a resume']
     },
     photo: String,
     password: {
@@ -25,16 +28,6 @@ const userSchema = new mongoose.Schema(
       required: [true, 'A user must have a password'],
       minlength: 8,
       select: false,
-    },
-    passwordConfirm: {
-      type: String,
-      required: [true, 'Password must be confirmed'],
-      validate: {
-        validator: function (el) {
-          return el === this.password;
-        },
-        message: 'The passwords are not the same!',
-      },
     },
     lastPwChanged: {
       type: Date,
@@ -55,8 +48,6 @@ userSchema.virtual('postedJobs', {
   foreignField: 'postedBy',
   localField: '_id',
 });
-
-//mongoose virtual => gets appliedJobs field from child document
 
 //mongoose middleware => bcrypt password
 userSchema.pre('save', async function (next) {

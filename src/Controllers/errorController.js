@@ -27,7 +27,6 @@ function prodError(err, res) {
     res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',
-      err,
     });
   }
 }
@@ -35,7 +34,6 @@ function prodError(err, res) {
 function devError(err, res) {
   res.status(err.statusCode).json({
     err,
-    message: err.message,
   });
 }
 
