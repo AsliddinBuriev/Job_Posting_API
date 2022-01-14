@@ -31,7 +31,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 //body-parser reading data from req.body
-app.use(express.json({ limit: '15kb' }));
+app.use(express.json({ limit: '20kb' }));
 app.use(express.urlencoded({ extended: false }));
 
 //data sanitization against Nosql query injection

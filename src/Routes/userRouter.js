@@ -10,6 +10,7 @@ import {
 import {
   deleteMyAccount,
   editMyProfile,
+  getMyPersonalAccount,
   getUserProfile,
 } from '../Controllers/userController.js';
 import {
@@ -20,7 +21,6 @@ import {
   restrict,
   updateAJob,
 } from '../Controllers/jobController.js';
-import { getApplicants } from '../Controllers/applicationController.js';
 
 const router = Router();
 
@@ -32,8 +32,6 @@ router
   .get(getAJob)
   .patch(updateAJob)
   .delete(deleteAJob);
-
-router.get('/posted-jobs/:jobId/applications', getApplicants);
 
 //applied jobs
 // router.get('/applied-jobs', )
@@ -52,11 +50,15 @@ router.patch('/reset-password/:token', resetPassword);
 //update password
 router.patch('/update-password', protect, updateMyPassword);
 
-//get public profile
-router.get('/:username', getUserProfile);
-
 //protected routes => user account
-router.use(protect);
-router.route('/account').patch(editMyProfile).delete(deleteMyAccount);
+router.use('/account', protect);
+router
+  .route('/account')
+  .get(getMyPersonalAccount)
+  .patch(editMyProfile)
+  .delete(deleteMyAccount);
+
+//get public profile
+router.get('/:userId', getUserProfile);
 
 export default router;

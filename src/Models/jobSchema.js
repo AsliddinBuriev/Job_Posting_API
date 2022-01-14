@@ -23,7 +23,6 @@ const jobSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: 'User',
       required: [true, 'A job must have a creator!'],
-      select: false,
     },
     contract: {
       type: String,
@@ -35,8 +34,6 @@ const jobSchema = new mongoose.Schema(
     },
     website: String,
     description: String,
-    requirements: Object,
-    role: Object,
   },
   {
     toJSON: { virtuals: true },
