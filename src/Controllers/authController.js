@@ -38,10 +38,10 @@ const sendToken = async (res, statusCode, user) => {
 export const signup = catchAsyncErr(async (req, res, next) => {
   //1.create user
   const newUser = await User.create({
-    name: req.body.name,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
     email: req.body.email,
     password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
   });
   //send token
   await sendToken(res, 201, newUser);
@@ -118,7 +118,7 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
     );
   }
   //send response
-  sendResponse(res, 204);
+  sendResponse(res, 200);
 });
 
 /******** PASSWORD RESET *******/
@@ -138,11 +138,10 @@ export const resetPassword = catchAsyncErr(async (req, res, next) => {
     return next(
       new MakeError('Your token is invalid or expired. Please try again!', 400)
     );
-
   user.password = req.body.password;
-  user.passwordConfirm = req.body.passwordConfirm;
   user.pwResetToken = undefined;
   user.pwResetTokenExpire = undefined;
+
   await user.save();
 
   //4. send token
