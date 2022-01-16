@@ -15,10 +15,6 @@ const jobSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
-    closeAt: {
-      type: Date,
-      required: [true, 'A post must have closing date!'],
-    },
     postedBy: {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
