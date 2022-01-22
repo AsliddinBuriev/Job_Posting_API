@@ -75,5 +75,5 @@ export const deleteAJob = catchAsyncErr(async (req, res, next) => {
   await Job.findByIdAndDelete(req.params.jobId);
 
   //send response
-  sendResponse(res, 204);
+  sendResponse(res, 200);
 });

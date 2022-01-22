@@ -12,6 +12,7 @@ import {
   editMyProfile,
   getMyPersonalAccount,
   getUserProfile,
+  fileUploadToServer,
 } from '../Controllers/userController.js';
 import {
   deleteAJob,
@@ -33,9 +34,6 @@ router
   .patch(updateAJob)
   .delete(deleteAJob);
 
-//applied jobs
-// router.get('/applied-jobs', )
-
 //sign up route
 router.post('/signup', signup);
 
@@ -55,7 +53,7 @@ router.use('/account', protect);
 router
   .route('/account')
   .get(getMyPersonalAccount)
-  .patch(editMyProfile)
+  .patch(fileUploadToServer, editMyProfile)
   .delete(deleteMyAccount);
 
 //get public profile
