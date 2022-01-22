@@ -44,7 +44,7 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
       req.files.photo[0].buffer,
       `user/images/image-${req.user._id}`
     );
-    // req.body.photo = storedPhoto.Location;
+    req.body.photo = storedPhoto.Location;
   }
   //2. upload resume to s3
   if (req.files.resume) {
@@ -52,8 +52,7 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
       req.files.resume[0].buffer,
       `user/resumes/resume-${req.user._id}`
     );
-    // req.body.resume = storedResume.Location;
-    console.log(storedResume);
+    req.body.resume = storedResume.Location;
   }
   //3. filter before update
   const filter = (objToFilter, ...allowedFields) => {

@@ -22,7 +22,11 @@ const userSchema = new mongoose.Schema(
     resume: {
       type: String,
     },
-    photo: String,
+    photo: {
+      type: String,
+      default:
+        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar',
+    },
     password: {
       type: String,
       required: [true, 'A user must have a password'],

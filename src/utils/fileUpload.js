@@ -1,9 +1,11 @@
 import S3 from 'aws-sdk/clients/s3.js';
 import multer from 'multer';
+import MakeError from './MakeError.js';
 
 /******** MULTER FILE UPLOAD *******/
 const fileFilter = (req, file, cb) => {
   const mimetype = file.mimetype.split('/');
+  console.log(mimetype);
   if (file.fieldname === 'resume' && mimetype[1] != 'pdf')
     cb(new MakeError('Please upload a pdf file!', 400), false);
   if (file.fieldname === 'photo' && mimetype[0] != 'image')
