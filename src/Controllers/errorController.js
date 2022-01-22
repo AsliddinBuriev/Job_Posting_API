@@ -3,16 +3,20 @@ import MakeError from './../utils/MakeError.js';
 export const errorController = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
+  //handle unhandled errors
+  let error = Object.create(err);
+  if (err.name === 'CastError') error = castError(err);
+  if (err.name === 'ValidationError') error = validationError(err);
+  if (err.name === 'JsonWebTokenError') error = invalidJwtToken();
+  if (err.name === 'TokenExpiredError') error = expiredJwtToken();
+  if (err.code === 'LIMIT_FILE_SIZE') error = largeFileError(err);
+  if (err.code === 11000) error = duplicateKey(err);
+  //send proper error response
   if (process.env.NODE_ENV === 'production') {
-    let error = Object.create(err);
-    if (err.name === 'CastError') error = castError(err);
-    if (err.name === 'ValidationError') error = validationError(err);
-    if (err.code === 11000) error = duplicateKey(err);
-    if (err.name === 'JsonWebTokenError') error = invalidJwtToken();
-    if (err.name === 'TokenExpiredError') error = expiredJwtToken();
     prodError(error, res);
   } else if (process.env.NODE_ENV === 'development') {
-    devError(err, res);
+    console.log(err);
+    devError(error, res);
   }
 };
 
@@ -33,7 +37,8 @@ function prodError(err, res) {
 //development error
 function devError(err, res) {
   res.status(err.statusCode).json({
-    err,
+    status: err.status,
+    message: err.message,
   });
 }
 
@@ -62,4 +67,11 @@ function invalidJwtToken() {
 //expired jwt token error
 function expiredJwtToken() {
   return new MakeError('You token is expired. Please log in again.', 401);
+}
+// large file upload error
+function largeFileError(err) {
+  return new MakeError(
+    `Uploaded ${err.field} size must not be more than 1MG!`,
+    400
+  );
 }
