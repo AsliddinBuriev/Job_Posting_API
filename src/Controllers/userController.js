@@ -3,8 +3,8 @@ import MakeError from '../utils/MakeError.js';
 import User from './../Models/userSchema.js';
 import Application from './../Models/applicationSchema.js';
 import sendResponse from '../utils/sendResponse.js';
-import { multerFileUpload, fileUploadToS3 } from '../utils/fileUpload.js';
-
+import { multerFileUpload, uploadFileToS3 } from '../utils/fileUpload.js';
+import sharp from 'sharp';
 /******** GET USER PROFILE *******/
 export const getUserProfile = catchAsyncErr(async (req, res, next) => {
   //get current user
@@ -40,17 +40,21 @@ export const fileUploadToServer = multerFileUpload.fields([
 export const editMyProfile = catchAsyncErr(async (req, res, next) => {
   //1. upload image to s3
   if (req.files.photo) {
-    const storedPhoto = await fileUploadToS3(
-      req.files.photo[0].buffer,
-      `user/images/image-${req.user._id}`
+    const image = await sharp(req.files.photo[0].buffer)
+      .jpeg({ mozjpeg: true })
+      .toBuffer();
+    const storedPhoto = await uploadFileToS3(
+      image,
+      `user/images/${req.user._id}.jpeg`
     );
     req.body.photo = storedPhoto.Location;
   }
   //2. upload resume to s3
   if (req.files.resume) {
-    const storedResume = await fileUploadToS3(
+    const extention = req.files.resume[0].mimetype.split('/')[1];
+    const storedResume = await uploadFileToS3(
       req.files.resume[0].buffer,
-      `user/resumes/resume-${req.user._id}`
+      `user/resumes/resume-${req.user._id}.pdf`
     );
     req.body.resume = storedResume.Location;
   }
@@ -68,7 +72,8 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
     'lastName',
     'photo',
     'email',
-    'resume'
+    'resume',
+    'about'
   );
   //4. update user data
   const updatedUser = await User.findByIdAndUpdate(req.user._id, dataToUpdate, {
