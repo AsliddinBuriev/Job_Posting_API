@@ -51,7 +51,6 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
   }
   //2. upload resume to s3
   if (req.files.resume) {
-    const extention = req.files.resume[0].mimetype.split('/')[1];
     const storedResume = await uploadFileToS3(
       req.files.resume[0].buffer,
       `user/resumes/resume-${req.user._id}.pdf`
