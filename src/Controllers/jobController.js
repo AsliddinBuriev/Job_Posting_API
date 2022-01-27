@@ -4,6 +4,9 @@ import Job from './../Models/jobSchema.js';
 import Application from './../Models/applicationSchema.js';
 import Query from '../utils/query.js';
 import sendResponse from '../utils/sendResponse.js';
+import { multerFileUpload, uploadFileToS3 } from '../utils/fileUpload.js';
+import sharp from 'sharp';
+
 /******** GET ALL JOBS *******/
 export const getAllJobs = catchAsyncErr(async (req, res, next) => {
   const features = new Query(Job.find(), req.query)
@@ -12,15 +15,12 @@ export const getAllJobs = catchAsyncErr(async (req, res, next) => {
     .select()
     .load();
   const jobs = await features.query;
-
-  //send response
   sendResponse(res, 200, jobs);
 });
 
 /******** GET A JOB *******/
 export const getAJob = catchAsyncErr(async (req, res, next) => {
   let job = await Job.findById(req.params.jobId);
-  //1.check if the job exists
   if (!job) return next(new MakeError('The job does not exist!', 404));
   job = { ...job._doc };
   //2. find application for the job
@@ -29,16 +29,29 @@ export const getAJob = catchAsyncErr(async (req, res, next) => {
   })
     .populate('applicant')
     .select('-_id -job -__v');
-
   //send response
   sendResponse(res, 200, job);
 });
 
+/******** UPLOAD FILE TO SERVER*******/
+export const fileUploadToServer = multerFileUpload.single('logo');
+
 /******** POST A JOB *******/
 export const postJob = catchAsyncErr(async (req, res, next) => {
   req.body.postedBy = req.user._id;
-  const newJob = await Job.create(req.body);
-
+  let newJob = new Job(req.body);
+  //save logo on s3 bucket
+  if (req.file) {
+    const image = await sharp(req.file.buffer)
+      .jpeg({ mozjpeg: true })
+      .toBuffer();
+    const storedLogo = await fileUploadToS3(
+      image,
+      `job/logo-${newJob._id}.jpeg`
+    );
+    newJob.logo = storedLogo.Location;
+  }
+  newJob = await newJob.save();
   //send response
   sendResponse(res, 201, newJob);
 });
@@ -62,18 +75,29 @@ export const restrict = catchAsyncErr(async (req, res, next) => {
 
 /******** UPDATE A JOB  *******/
 export const updateAJob = catchAsyncErr(async (req, res, next) => {
-  const updatedJob = await Job.findByIdAndUpdate(req.params.jobId, req.body, {
-    new: true,
-    runValidators: true,
+  const job = await Job.findById(req.params.jobId);
+  if (!job) next(new MakeError('The job does not exist!', 401));
+  if (req.file) {
+    const image = await sharp(req.file.buffer)
+      .jpeg({ mozjpeg: true })
+      .toBuffer();
+    const storedLogo = await uploadFileToS3(image, `job/logo-${job._id}.jpeg`);
+    req.body.logo = storedLogo.Location;
+  }
+  if (!req.body.logo) job.logo = undefined;
+  const fieldsToUpdate = Object.keys(req.body);
+  fieldsToUpdate.forEach((el) => {
+    job[el] = req.body[el];
   });
-
+  const updatedJob = await job.save();
   //send response
   sendResponse(res, 200, updatedJob);
 });
+
 /******** DELETE A JOB *******/
 export const deleteAJob = catchAsyncErr(async (req, res, next) => {
-  await Job.findByIdAndDelete(req.params.jobId);
-
+  const deletedJob = await Job.findByIdAndDelete(req.params.jobId);
+  console.log(deletedJob._id);
   //send response
   sendResponse(res, 200);
 });
