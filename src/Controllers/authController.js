@@ -11,7 +11,6 @@ const sendToken = async (res, statusCode, user) => {
   try {
     //1. create token
     const token = await sign({ id: user._id });
-    if (process.env.NODE_ENV === 'production') cookieOpt.secure = true;
     user.password = undefined;
     user.lastPwChanged = undefined;
     //2. send token
@@ -33,6 +32,7 @@ export const signup = catchAsyncErr(async (req, res, next) => {
     lastName: req.body.lastName,
     email: req.body.email,
     password: req.body.password,
+    about: req.user.about,
   });
   //send token
   await sendToken(res, 201, newUser);
@@ -40,6 +40,7 @@ export const signup = catchAsyncErr(async (req, res, next) => {
 
 /********  LOG IN *******/
 export const login = catchAsyncErr(async (req, res, next) => {
+  console.log(req.body);
   const { email, password } = req.body;
   //1. check if the password and email is posted
   if (!email || !password)
