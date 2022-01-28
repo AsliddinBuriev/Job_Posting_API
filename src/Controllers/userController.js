@@ -49,6 +49,9 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
     );
     req.body.photo = storedPhoto.Location;
   }
+  if (!req.body.photo)
+    req.body.photo =
+      'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar.jpeg';
   //2. upload resume to s3
   if (req.files.resume) {
     const storedResume = await uploadFileToS3(

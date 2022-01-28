@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
     photo: {
       type: String,
       default:
-        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar',
+        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar.jpeg',
     },
     password: {
       type: String,
