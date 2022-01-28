@@ -32,7 +32,7 @@ export const signup = catchAsyncErr(async (req, res, next) => {
     lastName: req.body.lastName,
     email: req.body.email,
     password: req.body.password,
-    about: req.user.about,
+    about: req.body.about,
   });
   //send token
   await sendToken(res, 201, newUser);
