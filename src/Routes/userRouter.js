@@ -21,6 +21,7 @@ import {
   getMyPostedJobs,
   restrict,
   updateAJob,
+  fileUploadToServer as singleFileUpload,
 } from '../Controllers/jobController.js';
 
 const router = Router();
@@ -31,7 +32,7 @@ router.use('/posted-jobs/:jobId', protect, restrict);
 router
   .route('/posted-jobs/:jobId')
   .get(getAJob)
-  .patch(updateAJob)
+  .patch(singleFileUpload, updateAJob)
   .delete(deleteAJob);
 
 //sign up route

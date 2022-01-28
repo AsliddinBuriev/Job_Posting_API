@@ -11,23 +11,13 @@ const sendToken = async (res, statusCode, user) => {
   try {
     //1. create token
     const token = await sign({ id: user._id });
-    const cookieOpt = {
-      expires: new Date(
-        Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
-      ),
-      httpOnly: true,
-    };
-    if (process.env.NODE_ENV === 'production') cookieOpt.secure = true;
     user.password = undefined;
     user.lastPwChanged = undefined;
-    //2. send token and cookie
-    res.cookie('jwt', token, cookieOpt);
+    //2. send token
     res.status(statusCode).json({
       status: 'success',
       token,
-      data: {
-        user,
-      },
+      data: { user },
     });
   } catch (err) {
     new MakeError('Something went very wrong!', 500);
@@ -42,6 +32,7 @@ export const signup = catchAsyncErr(async (req, res, next) => {
     lastName: req.body.lastName,
     email: req.body.email,
     password: req.body.password,
+    about: req.body.about,
   });
   //send token
   await sendToken(res, 201, newUser);
@@ -49,11 +40,11 @@ export const signup = catchAsyncErr(async (req, res, next) => {
 
 /********  LOG IN *******/
 export const login = catchAsyncErr(async (req, res, next) => {
+  console.log(req.body);
   const { email, password } = req.body;
   //1. check if the password and email is posted
   if (!email || !password)
     return next(new MakeError('Please provide your email and password!', 400));
-
   //2. check if the user exists && password is correct
   const user = await User.findOne({ email }).select('+password');
   if (!user || !(await user.isPasswordCorrect(password, user.password)))
@@ -70,15 +61,12 @@ export const protect = catchAsyncErr(async (req, res, next) => {
   if (authorization && authorization.startsWith('Bearer'))
     token = authorization.split(' ')[1];
   if (!token) return next(new MakeError('You are not logged in.', 401));
-
   //2. verify jwt token
   const decoded = await verify(token);
-
   //3. check if user still exists
   const loggedUser = await User.findById(decoded.id);
   if (!loggedUser)
     return next(new MakeError('The user no longer exists.', 401));
-
   //4. check if the user changed password
   if (loggedUser.isPasswordChanged(decoded.iat))
     return next(
@@ -128,7 +116,6 @@ export const resetPassword = catchAsyncErr(async (req, res, next) => {
     .createHash('sha256')
     .update(req.params.token)
     .digest('hex');
-
   const user = await User.findOne({
     pwResetToken: pwResetToken,
     pwResetTokenExpire: { $gt: Date.now() },
@@ -141,9 +128,7 @@ export const resetPassword = catchAsyncErr(async (req, res, next) => {
   user.password = req.body.password;
   user.pwResetToken = undefined;
   user.pwResetTokenExpire = undefined;
-
   await user.save();
-
   //4. send token
   await sendToken(res, 200, user);
 });

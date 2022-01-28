@@ -6,7 +6,11 @@ const jobSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A post should include the company name!'],
     },
-    logo: String,
+    logo: {
+      type: String,
+      default:
+        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/job/default-logo.jpeg',
+    },
     position: {
       type: String,
       required: [true, 'A job must have a position!'],

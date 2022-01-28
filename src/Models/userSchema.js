@@ -19,10 +19,15 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: [validator.isEmail, 'Please provide a valid email'],
     },
+    about: String,
     resume: {
       type: String,
     },
-    photo: String,
+    photo: {
+      type: String,
+      default:
+        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar.jpeg',
+    },
     password: {
       type: String,
       required: [true, 'A user must have a password'],
@@ -53,7 +58,6 @@ userSchema.virtual('postedJobs', {
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
-  this.passwordConfirm = undefined;
   next();
 });
 
