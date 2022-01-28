@@ -87,7 +87,7 @@ export const updateAJob = catchAsyncErr(async (req, res, next) => {
     const storedLogo = await uploadFileToS3(image, `job/logo-${job._id}.jpeg`);
     req.body.logo = storedLogo.Location;
   }
-  if (req.body.logo === 'undefined' || 'null')
+  if (req.body.logo === 'undefined' || req.body.logo === 'null')
     job.logo =
       'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/job/default-logo.jpeg';
   const fieldsToUpdate = Object.keys(req.body);
