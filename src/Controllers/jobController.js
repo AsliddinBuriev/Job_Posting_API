@@ -39,7 +39,7 @@ export const fileUploadToServer = multerFileUpload.single('logo');
 /******** POST A JOB *******/
 export const postJob = catchAsyncErr(async (req, res, next) => {
   req.body.postedBy = req.user._id;
-  if (req.body.logo === 'undefined' || 'null')
+  if (req.body.logo === 'undefined' || req.body.logo === 'null')
     req.body.logo =
       'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/job/default-logo.jpeg';
   let newJob = new Job(req.body);
