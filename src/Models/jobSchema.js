@@ -9,7 +9,7 @@ const jobSchema = new mongoose.Schema(
     logo: {
       type: String,
       default:
-        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/job/logo-61ed4b9191803c9b20b5f502.png',
+        'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/job/default-logo.jpeg',
     },
     position: {
       type: String,
