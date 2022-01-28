@@ -48,7 +48,7 @@ export const postJob = catchAsyncErr(async (req, res, next) => {
     const image = await sharp(req.file.buffer)
       .jpeg({ mozjpeg: true })
       .toBuffer();
-    const storedLogo = await fileUploadToS3(
+    const storedLogo = await uploadFileToS3(
       image,
       `job/logo-${newJob._id}.jpeg`
     );
@@ -87,7 +87,7 @@ export const updateAJob = catchAsyncErr(async (req, res, next) => {
     const storedLogo = await uploadFileToS3(image, `job/logo-${job._id}.jpeg`);
     req.body.logo = storedLogo.Location;
   }
-  if (!req.body.logo) job.logo = undefined;
+  if (req.body.logo === 'undefined' || 'null') job.logo = undefined;
   const fieldsToUpdate = Object.keys(req.body);
   fieldsToUpdate.forEach((el) => {
     job[el] = req.body[el];
