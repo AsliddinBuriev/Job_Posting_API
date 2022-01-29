@@ -21,7 +21,7 @@ import {
   getMyPostedJobs,
   restrict,
   updateAJob,
-  fileUploadToServer as singleFileUpload,
+  singleFileUpload,
 } from '../Controllers/jobController.js';
 
 const router = Router();
