@@ -74,7 +74,6 @@ export const restrict = catchAsyncErr(async (req, res, next) => {
 /******** UPDATE A JOB  *******/
 export const updateAJob = catchAsyncErr(async (req, res, next) => {
   const job = await Job.findById(req.params.jobId);
-
   if (req.file) {
     const image = await sharp(req.file.buffer).resize(500, 500).toBuffer();
     const storedLogo = await uploadFileToS3(image, `job/logo-${job._id}`);
@@ -88,6 +87,9 @@ export const updateAJob = catchAsyncErr(async (req, res, next) => {
   fieldsToUpdate.forEach((el) => {
     job[el] = req.body[el];
   });
+  if (req.body.logo === 'undefined' || req.body.logo === 'null')
+    job.logo =
+      'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/job/default-logo.jpeg';
   const updatedJob = await job.save();
   //send response
   sendResponse(res, {
