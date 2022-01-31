@@ -5,7 +5,7 @@ import {
   getAJob,
   getAllJobs,
   postJob,
-  fileUploadToServer,
+  singleFileUpload,
 } from '../Controllers/jobController.js';
 
 const router = Router({ mergeParams: true });
@@ -14,7 +14,7 @@ const router = Router({ mergeParams: true });
 router.use('/:jobId/apply', applicationRouter);
 
 //unprotected routes
-router.route('/').get(getAllJobs).post(protect, fileUploadToServer, postJob);
+router.route('/').get(getAllJobs).post(protect, singleFileUpload, postJob);
 router.route('/:jobId').get(getAJob);
 
 export default router;

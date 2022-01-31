@@ -41,4 +41,11 @@ export const uploadFileToS3 = (Body, Key) => {
 };
 
 /******** DELETE FILE FROM S3 *******/
-export const deleteFileFromS3 = () => {};
+export const deleteFileFromS3 = (Delete) => {
+  const s3 = new S3();
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Delete,
+  };
+  return s3.deleteObjects(params).promise();
+};

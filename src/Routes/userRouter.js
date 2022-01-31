@@ -12,7 +12,7 @@ import {
   editMyProfile,
   getMyPersonalAccount,
   getUserProfile,
-  fileUploadToServer,
+  multipleFileUpload,
 } from '../Controllers/userController.js';
 import {
   deleteAJob,
@@ -21,7 +21,7 @@ import {
   getMyPostedJobs,
   restrict,
   updateAJob,
-  fileUploadToServer as singleFileUpload,
+  singleFileUpload,
 } from '../Controllers/jobController.js';
 
 const router = Router();
@@ -54,7 +54,7 @@ router.use('/account', protect);
 router
   .route('/account')
   .get(getMyPersonalAccount)
-  .patch(fileUploadToServer, editMyProfile)
+  .patch(multipleFileUpload, editMyProfile)
   .delete(deleteMyAccount);
 
 //get public profile

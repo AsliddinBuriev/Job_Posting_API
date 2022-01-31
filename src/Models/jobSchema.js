@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-
+import Application from './applicationSchema.js';
+import { deleteFileFromS3 } from '../utils/fileUpload.js';
 const jobSchema = new mongoose.Schema(
   {
     company: {
@@ -47,4 +48,15 @@ jobSchema.virtual('applicants', {
   foreignField: 'jobId',
   localField: '_id',
 });
+
+//delete applicants, s3 logo, before deleting job
+jobSchema.post(/delete/gi, async function (doc) {
+  await Application.deleteMany({ job: doc._id });
+  if (!doc.logo.endsWith('default-logo.jpeg'))
+    await deleteFileFromS3({
+      Objects: [{ Key: `job/logo-${doc._id}` }],
+      Quiet: false,
+    });
+});
+
 export default mongoose.model('Job', jobSchema);

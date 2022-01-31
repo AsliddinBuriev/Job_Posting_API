@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import validator from 'validator';
 import crypto from 'crypto';
+import Application from './applicationSchema.js';
+import Job from './jobSchema.js';
+import { deleteFileFromS3 } from '../utils/fileUpload.js';
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -66,6 +69,21 @@ userSchema.pre('save', function (next) {
   if (this.isModified('password') && !this.isNew)
     this.lastPwChanged = Date.now();
   next();
+});
+//delete applications, s3 photo, resume, and postedJobs before deleting user
+userSchema.post(/delete/gi, async function (doc) {
+  const postedJobs = await Job.find({ postedBy: doc._id });
+  postedJobs.forEach(async (job) => {
+    await Job.findByIdAndDelete(job._id);
+  });
+  await Application.deleteMany({ applicant: doc._id });
+  await deleteFileFromS3({
+    Objects: [
+      { Key: `user/image/${doc._id}` },
+      { Key: `user/resume/${doc._id}` },
+    ],
+    Quiet: false,
+  });
 });
 
 //mongoose methods => isPasswordCorrect compare with bcrypt
