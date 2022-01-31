@@ -2,16 +2,18 @@ import catchAsyncErr from '../utils/catchAsyncErr.js';
 import MakeError from '../utils/MakeError.js';
 import User from './../Models/userSchema.js';
 import Application from './../Models/applicationSchema.js';
+import Job from './../Models/jobSchema.js';
 import sendResponse from '../utils/sendResponse.js';
 import { multerFileUpload, uploadFileToS3 } from '../utils/fileUpload.js';
 import sharp from 'sharp';
+
 /******** GET USER PROFILE *******/
 export const getUserProfile = catchAsyncErr(async (req, res, next) => {
   //get current user
   const user = await User.findById(req.params.userId);
   if (!user) return next(new MakeError('Requested user does not exist!'));
   //send response
-  sendResponse(res, 200, user);
+  sendResponse(res, { statusCode: 200, data: user, message: 'User profile' });
 });
 
 /******** GET PERSONAL ACCOUNT *******/
@@ -27,11 +29,15 @@ export const getMyPersonalAccount = catchAsyncErr(async (req, res, next) => {
     .select('-_id -applicant -__v');
 
   //send response
-  sendResponse(res, 200, user);
+  sendResponse(res, {
+    statusCode: 200,
+    data: user,
+    message: 'Personal account',
+  });
 });
 
 /******** UPLOAD FILE TO SERVER*******/
-export const fileUploadToServer = multerFileUpload.fields([
+export const multipleFileUpload = multerFileUpload.fields([
   { name: 'photo', maxCount: 1 },
   { name: 'resume', maxCount: 1 },
 ]);
@@ -41,18 +47,14 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
   //1. upload image to s3
   if (req.files.photo) {
     const image = await sharp(req.files.photo[0].buffer)
-      .jpeg({ mozjpeg: true })
+      .resize(500, 500)
       .toBuffer();
     const storedPhoto = await uploadFileToS3(
       image,
-      `user/images/${req.user._id}.jpeg`
+      `user/images/${req.user._id}`
     );
     req.body.photo = storedPhoto.Location;
   }
-
-  if (req.body.photo === 'undefined')
-    req.body.photo =
-      'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar.jpeg';
   //2. upload resume to s3
   if (req.files.resume) {
     const storedResume = await uploadFileToS3(
@@ -61,6 +63,11 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
     );
     req.body.resume = storedResume.Location;
   }
+
+  if (req.body.photo === 'undefined' || req.body.photo === 'null')
+    req.body.photo =
+      'https://dev-jobs-api.s3.ap-northeast-2.amazonaws.com/user/images/avatar.jpeg';
+
   //3. filter before update
   const filter = (objToFilter, ...allowedFields) => {
     const filteredObj = {};
@@ -84,13 +91,19 @@ export const editMyProfile = catchAsyncErr(async (req, res, next) => {
     runValidators: true,
   });
   //send response
-  sendResponse(res, 200, updatedUser);
+  sendResponse(res, {
+    statusCode: 200,
+    data: updatedUser,
+    message: 'Profile updated!',
+  });
 });
 
 /******** DELETE PERSONAL ACCOUNT  *******/
 export const deleteMyAccount = catchAsyncErr(async (req, res, next) => {
-  //1. find and delete user
   await User.findByIdAndDelete(req.user._id);
-  //send response
-  sendResponse(res, 204);
+  sendResponse(res, {
+    statusCode: 200,
+    data: null,
+    message: 'Account deleted!',
+  });
 });

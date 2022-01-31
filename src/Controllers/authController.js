@@ -7,8 +7,9 @@ import crypto from 'crypto';
 import sendResponse from '../utils/sendResponse.js';
 
 //send token
-const sendToken = async (res, statusCode, user) => {
+const sendToken = async (res, resData) => {
   try {
+    const { statusCode, user, message } = resData;
     //1. create token
     const token = await sign({ id: user._id });
     user.password = undefined;
@@ -16,6 +17,7 @@ const sendToken = async (res, statusCode, user) => {
     //2. send token
     res.status(statusCode).json({
       status: 'success',
+      message,
       token,
       data: { user },
     });
@@ -35,12 +37,15 @@ export const signup = catchAsyncErr(async (req, res, next) => {
     about: req.body.about,
   });
   //send token
-  await sendToken(res, 201, newUser);
+  await sendToken(res, {
+    statusCode: 201,
+    user: newUser,
+    message: 'User created successfully!',
+  });
 });
 
 /********  LOG IN *******/
 export const login = catchAsyncErr(async (req, res, next) => {
-  console.log(req.body);
   const { email, password } = req.body;
   //1. check if the password and email is posted
   if (!email || !password)
@@ -50,7 +55,11 @@ export const login = catchAsyncErr(async (req, res, next) => {
   if (!user || !(await user.isPasswordCorrect(password, user.password)))
     return next(new MakeError('Email or password is wrong!', 401));
   //3. send token
-  await sendToken(res, 200, user);
+  await sendToken(res, {
+    statusCode: 200,
+    user,
+    message: 'Logged in successfully!',
+  });
 });
 
 /******** PROTECT *******/
@@ -83,7 +92,7 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
   if (!user)
     return next(new MakeError(`There is no account with this email!`, 400));
 
-  //2. Generate the random reset token with crypto module, encrypt and save token into db
+  //2. Generate the random reset token with crypto module
   const token = await user.generateResetPwToken();
   await user.save({ validateBeforeSave: false });
 
@@ -105,8 +114,11 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
       )
     );
   }
-  //send response
-  sendResponse(res, 200);
+  sendResponse(res, {
+    statusCode: 200,
+    data: null,
+    message: 'Email sent successfully!',
+  });
 });
 
 /******** PASSWORD RESET *******/
@@ -130,7 +142,7 @@ export const resetPassword = catchAsyncErr(async (req, res, next) => {
   user.pwResetTokenExpire = undefined;
   await user.save();
   //4. send token
-  await sendToken(res, 200, user);
+  await sendToken(res, { statusCode: 200, user, message: 'Password updated!' });
 });
 
 /********  UPDATE PASSWORD *******/
@@ -145,5 +157,5 @@ export const updateMyPassword = catchAsyncErr(async (req, res, next) => {
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
   //4. send token
-  await sendToken(res, 200, user);
+  await sendToken(res, { statusCode: 200, user, message: 'Password updated!' });
 });
