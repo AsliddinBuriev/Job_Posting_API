@@ -2,7 +2,7 @@ import catchAsyncErr from '../utils/catchAsyncErr.js';
 import User from './../Models/userSchema.js';
 import { sign, verify } from '../utils/jwt.js';
 import MakeError from './../utils/MakeError.js';
-import sendMail from './../utils/mail.js';
+import Email from './../utils/mail.js';
 import crypto from 'crypto';
 import sendResponse from '../utils/sendResponse.js';
 
@@ -95,14 +95,11 @@ export const forgotPassword = catchAsyncErr(async (req, res, next) => {
   //2. Generate the random reset token with crypto module
   const token = await user.generateResetPwToken();
   await user.save({ validateBeforeSave: false });
-
   // 3. Send it to user's email along with a url
+
   try {
-    await sendMail({
-      email: user.email,
-      subject: 'Reset your password!',
-      text: `Please go to the url to reset your password: http://localhost:3000/recovery/${token}\nThe url is valid for 10 minutes!`,
-    });
+    const url = `${req.protocol}://${req.get('host')}/recovery/${token}`;
+    await new Email(user, url).resetPassword();
   } catch (err) {
     user.pwResetToken = undefined;
     user.pwResetTokenExpire = undefined;
