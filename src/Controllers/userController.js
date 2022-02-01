@@ -2,7 +2,6 @@ import catchAsyncErr from '../utils/catchAsyncErr.js';
 import MakeError from '../utils/MakeError.js';
 import User from './../Models/userSchema.js';
 import Application from './../Models/applicationSchema.js';
-import Job from './../Models/jobSchema.js';
 import sendResponse from '../utils/sendResponse.js';
 import { multerFileUpload, uploadFileToS3 } from '../utils/fileUpload.js';
 import sharp from 'sharp';

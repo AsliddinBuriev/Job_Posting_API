@@ -15,7 +15,7 @@ export const errorController = (err, req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     prodError(error, res);
   } else if (process.env.NODE_ENV === 'development') {
-    console.log(err);
+    // console.log(err);
     devError(error, res);
   }
 };
