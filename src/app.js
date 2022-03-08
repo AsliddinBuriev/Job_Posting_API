@@ -1,4 +1,5 @@
 import cors from 'cors';
+import path from 'path';
 import express from 'express';
 import { errorController } from './Controllers/errorController.js';
 import jobRouter from './Routes/jobRouter.js';
@@ -16,6 +17,8 @@ const app = express();
 //set cors middleware
 app.use(cors());
 
+app.set('view engine', 'pug');
+app.set('views', './Views');
 //set helmet
 app.use(helmet());
 
